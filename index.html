@@ -514,7 +514,7 @@
 
     function QuartileGame() {
       const [data, setData] = useState(generateQuartileQ());
-      const [dragIndex, setDragIndex] = useState(null);
+      const [selectedIndex, setSelectedIndex] = useState(null);
       const [step, setStep] = useState(0);
       const [popup, setPopup] = useState({ show: false, type: 'success', text: '' });
       const [completed, setCompleted] = useState(false);
@@ -528,22 +528,40 @@
         window.setTimeout(() => setPopup({ show: false, type, text }), 900);
       }
 
-      function handleDragStart(index) {
+      function swapData(firstIndex, secondIndex) {
+
         if (completed) return;
-        setDragIndex(index);
-      }
 
-      function handleDrop(index) {
-        if (dragIndex === null || completed) return;
         const newData = [...data];
-        [newData[dragIndex], newData[index]] = [newData[index], newData[dragIndex]];
+
+        [newData[firstIndex], newData[secondIndex]] = [
+          newData[secondIndex],
+          newData[firstIndex]
+        ];
+
         setData(newData);
-        setDragIndex(null);
       }
 
-      function handleTouchEnd(index) {
-        if (dragIndex === null || completed || dragIndex === index) return;
-        handleDrop(index);
+      function handleSelect(index) {
+
+        if (completed) return;
+
+        // pilih pertama
+        if (selectedIndex === null) {
+          setSelectedIndex(index);
+          return;
+        }
+
+        // batal pilih
+        if (selectedIndex === index) {
+          setSelectedIndex(null);
+          return;
+        }
+
+        // tukar posisi
+        swapData(selectedIndex, index);
+
+        setSelectedIndex(null);
       }
 
       function checkAnswer() {
@@ -584,24 +602,23 @@
 
             <div className="mt-5 rounded-[1.75rem] bg-white/80 p-4 shadow-inner">
               <p className="mb-3 text-sm font-bold text-slate-700">Susun kartu angka</p>
+              <p className="mb-4 text-xs text-slate-500"> Ketuk 2 kartu untuk menukar posisi</p>
               <div className="flex flex-wrap gap-3">
                 {data.map((num, index) => (
                   <div
+                   <button
                     key={`${num}-${index}`}
-                    draggable={!completed}
-                    onDragStart={() => handleDragStart(index)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handleDrop(index)}
-                    onTouchStart={() => handleDragStart(index)}
-                    onTouchEnd={() => handleTouchEnd(index)}
-                    className={`rounded-2xl px-4 py-3 text-lg font-black shadow-lg transition ${
+                    onClick={() => handleSelect(index)}
+                    className={`rounded-2xl px-4 py-3 text-lg font-black shadow-lg transition duration-200 active:scale-95 ${
                       completed
                         ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white'
-                        : 'cursor-move bg-gradient-to-r from-fuchsia-400 to-pink-400 text-white hover:-translate-y-1'
+                        : selectedIndex === index
+                        ? 'scale-110 ring-4 ring-yellow-300 bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
+                        : 'bg-gradient-to-r from-fuchsia-400 to-pink-400 text-white hover:-translate-y-1'
                     }`}
                   >
                     {num}
-                  </div>
+                  </button>
                 ))}
               </div>
 
